@@ -1,5 +1,6 @@
 #include "helpers.h"
 #include "screen.h"
+//#include "settings.h"
 
 bool Screen::_int = false;
 
@@ -14,8 +15,12 @@ Screen::Screen()
 	tft.setSwapBytes(true);
 }
 
-void Screen::begin(TwoWire *theWire)
+void Screen::begin(Settings *settings, TwoWire *theWire)
 {
+	Serial.println("in Screen::begin");
+	this->settings = settings;
+	Serial.println("settings set");
+	
 	_wire = theWire;
 	header = new Header(&tft);
 	channel[0] = new Channel(&tft, _wire, 0, 50, 0);
@@ -35,13 +40,13 @@ void Screen::begin(TwoWire *theWire)
 	tft.drawString(String(__TIME__), 320, 295, 2);
 	tft.unloadFont();
 
-	setting = new Setting(&tft);
+	screen_setting = new ScreenSetting(&tft, settings);
 
 	WiFi.mode(WIFI_STA);
 	WiFi.disconnect();
 	delay(100);
 	udp.begin(WIFI_UDP_PORT);
-	wifiManager = new WiFiManager(udp, client, setting);
+	wifiManager = new WiFiManager(udp, client, screen_setting, settings);
 
 	fsInit();
 	delay(2000);
@@ -188,18 +193,18 @@ void Screen::checkOnOff()
 			channel[0]->off();
 			channel[1]->off();
 			tft.fillRect(0, 0, 480, 320, BG_COLOR);
-			setting->turnOffBacklight();
+			screen_setting->turnOffBacklight();
 			writeSysLED(0);
-			setting->setLogInterval(0);
+			screen_setting->setLogInterval(0);
 		} else {
 			shutdown = false;
 			tft.fillRect(0, 0, 480, 320, BG_COLOR);
-			setting->setLogInterval();
-			setting->setBacklightLevelPreset();
+			screen_setting->setLogInterval();
+			screen_setting->setBacklightLevelPreset();
 
 			header->init(5, 8);
 			if (mode >= SETTING) {
-				setting->init(10, 80);
+				screen_setting->init(10, 80);
 				for (int i = 0; i < 2; i++)
 					tft.drawLine(0, 50 + i, 480, 50 + i, TFT_DARKGREY);
 				selected = dial_cnt = dial_cnt_old = STATE_NONE;
@@ -235,8 +240,8 @@ void Screen::deSelect()
 
 void Screen::deSelectSetting()
 {
-	setting->deSelectBLLevel();
-	setting->deSelectSerialLogging();
+	screen_setting->deSelectBLLevel();
+	screen_setting->deSelectSerialLogging();
 	header->deSelect(LOGGING);
 	header->deSelect(WIFI);
 }
@@ -285,10 +290,10 @@ void Screen::select_setting()
 	selected = dial_cnt;
 	switch (dial_cnt) {
 		case STATE_BL:
-			setting->selectBLLevel();
+			screen_setting->selectBLLevel();
 			break;
 		case STATE_LOG:
-			setting->selectSerialLogging();
+			screen_setting->selectSerialLogging();
 			break;
 		case STATE_SETTING_WIFI:
 			header->select(WIFI);
@@ -310,7 +315,7 @@ void Screen::drawBase()
 		channel[0]->setHide();
 		channel[1]->setHide();
 		mode = SETTING;
-		setting->init(10, 80);
+		screen_setting->init(10, 80);
 		updated_wifi_info = true;
 		updated_wifi_icon = true;
 		wifiManager->update_wifi_info = true;
@@ -363,10 +368,10 @@ void Screen::drawBaseMove()
 		} else if (selected == STATE_LOGGING) {
 			// same as current state, but redraw will check selection timeout
 			mode = BASE_MOVE;
-			if (setting->isLoggingEnabled()) {
-				setting->disableLogging();
+			if (screen_setting->isLoggingEnabled()) {
+				screen_setting->disableLogging();
 			} else {
-				setting->enableLogging();
+				screen_setting->enableLogging();
 			}
 		} else if (selected == STATE_WIFI) {
 			// same as current state, but redraw will check selection timeout
@@ -439,24 +444,24 @@ void Screen::drawSetting()
 	}
 	if (btn_pressed[1] == true) {
 		btn_pressed[1] = false;
-		setting->debug();
+		screen_setting->debug();
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
 		if (selected == STATE_BL) {
 			mode = SETTING_BL;
-			dial_cnt = setting->getBacklightLevel();
-			setting->selectBLLevel(TFT_GREEN);
+			dial_cnt = screen_setting->getBacklightLevel();
+			screen_setting->selectBLLevel(TFT_GREEN);
 		} else if (selected == STATE_LOG) {
 			mode = SETTING_LOG;
-			dial_cnt = setting->getSerialBaudLevel();
-			setting->selectSerialLogging(TFT_GREEN);
-			setting->selectSerialBaud(TFT_YELLOW);
+			dial_cnt = screen_setting->getSerialBaudIndex();
+			screen_setting->selectSerialLogging(TFT_GREEN);
+			screen_setting->selectSerialBaud(TFT_YELLOW);
 		} else if (selected == STATE_SETTING_LOGGING) {
-			if (setting->isLoggingEnabled()) {
-				setting->disableLogging();
+			if (screen_setting->isLoggingEnabled()) {
+				screen_setting->disableLogging();
 			} else {
-				setting->enableLogging();
+				screen_setting->enableLogging();
 			}
 		} else if (selected == STATE_SETTING_WIFI) {
 			if (wifiManager->isWiFiEnabled()) {
@@ -475,8 +480,8 @@ void Screen::drawSettingBL()
 		mode = SETTING;
 		deSelectSetting();
 		selected = dial_cnt = dial_cnt_old = STATE_NONE;
-		setting->changeBacklight();
-		setting->deSelectBLLevel();
+		screen_setting->changeBacklight();
+		screen_setting->deSelectBLLevel();
 	}
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
 		flag_long_press = 3;
@@ -484,22 +489,22 @@ void Screen::drawSettingBL()
 		mode = SETTING;
 		selected = dial_cnt = dial_cnt_old = STATE_BL;
 		deSelectSetting();
-		setting->changeBacklight();
-		setting->selectBLLevel();
+		screen_setting->changeBacklight();
+		screen_setting->selectBLLevel();
 		return;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
 		mode = SETTING;
-		NVS.setInt("bl_level", setting->setBacklightLevelPreset());
-		setting->selectBLLevel();
+		settings->setBacklightLevelIndex(screen_setting->setBacklightLevelPreset());
+		screen_setting->selectBLLevel();
 		selected = dial_cnt = STATE_BL;
 		return;
 	}
 	if (dial_cnt != dial_cnt_old) {
 		clampVariableToRange(0, 6, &dial_cnt);
 		dial_cnt_old = dial_cnt;
-		setting->changeBacklight(dial_cnt);
+		screen_setting->changeBacklight(dial_cnt);
 	}
 }
 
@@ -509,37 +514,37 @@ void Screen::drawSettingLOG()
 		mode = SETTING;
 		deSelectSetting();
 		selected = dial_cnt = dial_cnt_old = dial_cnt_old = STATE_NONE;
-		setting->deSelectSerialBaud(TFT_WHITE);
-		setting->restoreSerialBaud();
-		setting->deSelectLogInterval(TFT_WHITE);
-		setting->restoreLogIntervalValue();
-		setting->deSelectSerialLogging(TFT_YELLOW);
+		screen_setting->deSelectSerialBaud(TFT_WHITE);
+		screen_setting->restoreSerialBaud();
+		screen_setting->deSelectLogInterval(TFT_WHITE);
+		screen_setting->restoreLogIntervalValue();
+		screen_setting->deSelectSerialLogging(TFT_YELLOW);
 	}
 	if ((btn_pressed[2] == true) || (flag_long_press == 2)){
 		flag_long_press = 3;
 		btn_pressed[2] = false;
 		mode = SETTING;
 		selected = dial_cnt = dial_cnt_old = STATE_LOG;
-		setting->deSelectSerialBaud(TFT_WHITE);
-		setting->restoreSerialBaud();
-		setting->deSelectLogInterval(TFT_WHITE);
-		setting->restoreLogIntervalValue();
-		setting->deSelectSerialLogging(TFT_YELLOW);
+		screen_setting->deSelectSerialBaud(TFT_WHITE);
+		screen_setting->restoreSerialBaud();
+		screen_setting->deSelectLogInterval(TFT_WHITE);
+		screen_setting->restoreLogIntervalValue();
+		screen_setting->deSelectSerialLogging(TFT_YELLOW);
 		return;
 	}
 	if (btn_pressed[3] == true) {
 		btn_pressed[3] = false;
 		if (selected == 5) {
 			mode = SETTING;
-			NVS.setInt("serial_baud", setting->setSerialBaud());
-			NVS.setInt("log_interval", setting->setLogInterval());
+			screen_setting->setSerialBaud();
+			screen_setting->setLogInterval();
 			selected = dial_cnt = dial_cnt_old = STATE_LOG;
-			setting->deSelectLogInterval(TFT_WHITE);
-			setting->deSelectSerialLogging(TFT_YELLOW);
+			screen_setting->deSelectLogInterval(TFT_WHITE);
+			screen_setting->deSelectSerialLogging(TFT_YELLOW);
 		} else {
-			setting->deSelectSerialBaud(TFT_WHITE);
-			setting->selectLogInterval();
-			dial_cnt = dial_cnt_old = setting->getLogInterval();
+			screen_setting->deSelectSerialBaud(TFT_WHITE);
+			screen_setting->selectLogInterval();
+			dial_cnt = dial_cnt_old = screen_setting->getLogInterval();
 			selected = 5;
 		}
 		return;
@@ -547,10 +552,10 @@ void Screen::drawSettingLOG()
 	if (dial_cnt != dial_cnt_old) {
 		if (selected == 5) {
 			clampVariableToRange(0, 6, &dial_cnt);
-			setting->changeLogInterval(dial_cnt);
+			screen_setting->changeLogInterval(dial_cnt);
 		} else {
 			clampVariableToRange(0, 9, &dial_cnt);
-			setting->changeSerialBaud(dial_cnt);
+			screen_setting->changeSerialBaud(dial_cnt);
 		}
 		dial_cnt_old = dial_cnt;
 	}
@@ -558,9 +563,9 @@ void Screen::drawSettingLOG()
 
 uint16_t Screen::getEnabledLogInterval(void)
 {
-	uint16_t tmp = setting->getLogIntervalValue();
+	uint16_t tmp = screen_setting->getLogIntervalValue();
 
-	if (tmp > 0 and setting->isLoggingEnabled()) {
+	if (tmp > 0 and screen_setting->isLoggingEnabled()) {
 		header->onLogging();
 		return tmp;
 	} else if (tmp > 0) {
@@ -616,16 +621,16 @@ void Screen::drawScreen()
 			if (updated_wifi_info || wifiManager->update_wifi_info) {
 				updated_wifi_info = wifiManager->update_wifi_info = false;
 				if (WiFi.status() == WL_CONNECTED) {
-					setting->drawSSID(wifiManager->apInfoConnected());
+					screen_setting->drawSSID(wifiManager->apInfoConnected());
 				} else if (wifiManager->hasSavedConnectionInfo()) {
-					setting->drawSSID(wifiManager->apInfoSaved());
+					screen_setting->drawSSID(wifiManager->apInfoSaved());
 				} else {
-					setting->drawSSID("WiFi not saved");
+					screen_setting->drawSSID("WiFi not saved");
 				}
 			}
 			if (wifiManager->update_udp_info) {
-				setting->drawUDPIpaddr(wifiManager->ipaddr_udp.toString());
-				setting->drawUDPport(wifiManager->port_udp);
+				screen_setting->drawUDPIpaddr(wifiManager->ipaddr_udp.toString());
+				screen_setting->drawUDPport(wifiManager->port_udp);
 				wifiManager->update_udp_info = false;
 			}
 		}
@@ -642,8 +647,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[0]->setVolt(dial_cnt);  // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
-				NVS.setString("voltage0", String(channel[0]->getVolt()/1000.0));
-
+				settings->setChannel0Voltage(String(channel[0]->getVolt()/1000.0));
 			}
 		} else {
 			channel[0]->editVolt(dial_cnt);
@@ -653,7 +657,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[0]->setCurrentLimit(dial_cnt); // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
-				NVS.setString("current_limit0", String(channel[0]->getCurrentLimit()/10.0));
+				settings->setChannel0CurrentLimit(String(channel[0]->getCurrentLimit()/10.0));
 			}
 		} else {
 			channel[0]->editCurrentLimit(dial_cnt);
@@ -664,7 +668,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[1]->setVolt(dial_cnt);  // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
-				NVS.setString("voltage1", String(channel[1]->getVolt()/1000.0));
+				settings->setChannel1Voltage(String(channel[1]->getVolt()/1000.0));
 			}
 		} else {
 			channel[1]->editVolt(dial_cnt);
@@ -674,7 +678,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[1]->setCurrentLimit(dial_cnt); // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
-				NVS.setString("current_limit1", String(channel[1]->getCurrentLimit()/10.0));
+				settings->setChannel1CurrentLimit(String(channel[1]->getCurrentLimit()/10.0));
 			}
 		} else {
 			channel[1]->editCurrentLimit(dial_cnt);
@@ -845,50 +849,41 @@ void Screen::fsInit(void)
 	uint8_t log_interval = 0;
 	uint32_t serial_baud = 115200;
 	uint16_t port_udp = 0;
-	String ipaddr_udp = "0.0.0.0";
+	IPAddress address;
+	address.fromString("0.0.0.0");
 
-	if (checkFirstBoot()) {
+	Serial.println("Screen::fsInit");
+	if (settings->isFirstBoot(true)) {
 		Serial.println("First boot!!!");
-		NVS.setInt("autorun", 0);
-		NVS.setInt("bl_level", backlight_level_preset);
-		NVS.setInt("serial_baud", serial_baud, true);
-		NVS.setInt("log_interval", log_interval);
-		NVS.setString("firstboot", "no");
-		NVS.setString("voltage0", String(volt_set0));
-		NVS.setString("voltage1", String(volt_set1));
-		NVS.setString("current_limit0", String(current_limit0));
-		NVS.setString("current_limit1", String(current_limit1));
-		NVS.setString("ipaddr_udp", ipaddr_udp);
-		NVS.setInt("port_udp", port_udp);
+		settings->setBacklightLevelIndex(backlight_level_preset);
+		settings->setSerialBaudRate(serial_baud);
+		settings->setLogInterval(log_interval);
+		settings->setFirstBoot(false);
+		settings->setChannel0Voltage(String(volt_set0));
+		settings->setChannel1Voltage(String(volt_set1));
+		settings->setChannel0CurrentLimit(String(current_limit0));
+		settings->setChannel1CurrentLimit(String(current_limit1));
+		settings->setWifiIpv4UdpLoggingServerIpAddress(address, true);
+		settings->setWifiIpv4UdpLoggingServerPort(port_udp);
 	}
-	volt_set0 = NVS.getString("voltage0").toFloat()*1000;
-	volt_set1 = NVS.getString("voltage1").toFloat()*1000;
-	current_limit0 = NVS.getString("current_limit0").toFloat()*1000;
-	current_limit1 = NVS.getString("current_limit1").toFloat()*1000;
-	backlight_level_preset = NVS.getInt("bl_level");
-	serial_baud = NVS.getInt("serial_baud");
-	log_interval = NVS.getInt("log_interval");
-
-	if (!NVS.getInt("wifi_conn_ok"))
-		wifiManager->credentials_state = STATE_CREDENTIALS_INVALID;
+	volt_set0 = settings->getChannel0Voltage().toFloat()*1000;
+	volt_set1 = settings->getChannel1Voltage().toFloat()*1000;
+	current_limit0 = settings->getChannel0CurrentLimit().toFloat()*1000;
+	current_limit1 = settings->getChannel1CurrentLimit().toFloat()*1000;
+	backlight_level_preset = settings->getBacklightLevelIndex(true);
+	serial_baud = settings->getSerialBaudRate(true);
+	log_interval = settings->getLogInterval(true);
 
 	channel[0]->setVolt(volt_set0, 1);
 	channel[0]->setCurrentLimit(current_limit0, 1);
 	channel[1]->setVolt(volt_set1, 1);
 	channel[1]->setCurrentLimit(current_limit1, 1);
-	setting->setBacklightLevelPreset(backlight_level_preset, true);
-	setting->setSerialBaud(serial_baud);
-	setting->setLogInterval(log_interval);
-	wifiManager->ipaddr_udp.fromString(NVS.getString("ipaddr_udp"));
-	wifiManager->port_udp = NVS.getInt("port_udp");
-}
+	screen_setting->setBacklightLevelPreset(backlight_level_preset, true);
+	screen_setting->setSerialBaud(serial_baud);
+	screen_setting->setLogInterval(log_interval);
 
-bool Screen::checkFirstBoot()
-{
-	if (NVS.getString("firstboot") != "no")
-		return 1;
-	else
-		return 0;
+	wifiManager->ipaddr_udp = settings->getWifiIpv4UdpLoggingServerIpAddress(true);
+	wifiManager->port_udp = settings->getWifiIpv4UdpLoggingServerPort(true);
 }
 
 void Screen::debug()
