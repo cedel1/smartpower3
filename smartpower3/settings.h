@@ -69,22 +69,22 @@ public:
 	void setFirstBoot(bool firstBoot = false, bool force_commit = true);
 	wifi_credentials_state_e getWifiCredentialsState(bool from_storage = false);
 	void setWifiCredentialsState(wifi_credentials_state_e wifiCredentialsStateSettings, bool force_commit = false);
-	String getChannel0CurrentLimit(bool from_storage = false);
-	void setChannel0CurrentLimit(String channel0CurrentLimit, bool force_commit = true);
-	String getChannel0Voltage(bool from_storage = false);
-	void setChannel0Voltage (String channel0Voltage, bool force_commit = true);
-	String getChannel1CurrentLimit(bool from_storage = false);
-	void setChannel1CurrentLimit (String channel1CurrentLimit, bool force_commit = true);
-	String getChannel1Voltage(bool from_storage = false);
-	void setChannel1Voltage (String channel1Voltage, bool force_commit = true);
+	uint16_t getChannel0CurrentLimit(bool from_storage = false);
+	void setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool force_commit = true);
+	uint16_t getChannel0Voltage(bool from_storage = false);
+	void setChannel0Voltage (uint16_t channel0Voltage, bool force_commit = true);
+	uint16_t getChannel1CurrentLimit(bool from_storage = false);
+	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool force_commit = true);
+	uint16_t getChannel1Voltage(bool from_storage = false);
+	void setChannel1Voltage (uint16_t channel1Voltage, bool force_commit = true);
 
 private:
 	bool first_boot = false;
 	// Power settings
-	String channel_0_voltage;
-	String channel_0_current_limit;
-	String channel_1_voltage;
-	String channel_1_current_limit;
+	uint16_t channel_0_voltage = 5000;  // 5.0V in millivolts, default when first boot
+	uint16_t channel_0_current_limit = 3000;  // 3.0A in milliamperes, default when first boot
+	uint16_t channel_1_voltage = 5000;  // 5.0V in millivolts, default when first boot;
+	uint16_t channel_1_current_limit = 3000;  // 3.0A in milliamperes, default when first boot
 	// Backlight level
 	uint8_t backlight_level_index = 0;
 	uint8_t backlight_level_preset[7] = {10, 25, 50, 75, 100, 125, 150};

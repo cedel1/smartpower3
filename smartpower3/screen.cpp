@@ -356,7 +356,7 @@ void Screen::drawBaseMove()
 		} else if (selected == STATE_CURRENT0) {
 			mode = BASE_EDIT;
 			channel[0]->setCompColor(CURRENT);
-			current_limit = channel[0]->getCurrentLimit();
+			current_limit = channel[0]->getCurrentLimit()/100;
 		} else if (selected == STATE_VOLT1) {
 			mode = BASE_EDIT;
 			channel[1]->setCompColor(VOLT);
@@ -364,7 +364,7 @@ void Screen::drawBaseMove()
 		} else if (selected == STATE_CURRENT1) {
 			mode = BASE_EDIT;
 			channel[1]->setCompColor(CURRENT);
-			current_limit = channel[1]->getCurrentLimit();
+			current_limit = channel[1]->getCurrentLimit()/100;
 		} else if (selected == STATE_LOGGING) {
 			// same as current state, but redraw will check selection timeout
 			mode = BASE_MOVE;
@@ -647,7 +647,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[0]->setVolt(dial_cnt);  // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
-				settings->setChannel0Voltage(String(channel[0]->getVolt()/1000.0));
+				settings->setChannel0Voltage(channel[0]->getVolt());
 			}
 		} else {
 			channel[0]->editVolt(dial_cnt);
@@ -655,9 +655,9 @@ void Screen::changeVolt(screen_mode_t mode)
 	} else if (selected == STATE_CURRENT0) {
 		clampVariableToRange(-(current_limit - 5), (30 - current_limit), &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[0]->setCurrentLimit(dial_cnt); // this by default sets incremental difference to currently set value
+			channel[0]->setCurrentLimit(dial_cnt);  // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
-				settings->setChannel0CurrentLimit(String(channel[0]->getCurrentLimit()/10.0));
+				settings->setChannel0CurrentLimit(channel[0]->getCurrentLimit());
 			}
 		} else {
 			channel[0]->editCurrentLimit(dial_cnt);
@@ -668,7 +668,7 @@ void Screen::changeVolt(screen_mode_t mode)
 		if (mode == BASE_MOVE) {
 			channel[1]->setVolt(dial_cnt);  // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
-				settings->setChannel1Voltage(String(channel[1]->getVolt()/1000.0));
+				settings->setChannel1Voltage(channel[1]->getVolt());
 			}
 		} else {
 			channel[1]->editVolt(dial_cnt);
@@ -676,9 +676,9 @@ void Screen::changeVolt(screen_mode_t mode)
 	} else if (selected == STATE_CURRENT1) {
 		clampVariableToRange(-(current_limit - 5), (30 - current_limit), &dial_cnt);
 		if (mode == BASE_MOVE) {
-			channel[1]->setCurrentLimit(dial_cnt); // this by default sets incremental difference to currently set value
+			channel[1]->setCurrentLimit(dial_cnt);  // this by default sets incremental difference to currently set value
 			if (dial_cnt != 0) {
-				settings->setChannel1CurrentLimit(String(channel[1]->getCurrentLimit()/10.0));
+				settings->setChannel1CurrentLimit(channel[1]->getCurrentLimit());
 			}
 		} else {
 			channel[1]->editCurrentLimit(dial_cnt);
@@ -841,10 +841,10 @@ uint32_t Screen::read32(fs::File &f) {
 
 void Screen::fsInit(void)
 {
-	float volt_set0 = 5.0;
-	float volt_set1 = 5.0;
-	float current_limit0 = 3.0;
-	float current_limit1 = 3.0;
+	uint16_t volt_set0 = 5000;  // 5.0V in millivolts
+	uint16_t volt_set1 = 5000;  // 5.0V in millivolts
+	uint16_t current_limit0 = 3000;  // 3.0A in milliamps
+	uint16_t current_limit1 = 3000;  // 3.0A in milliamps
 	uint8_t backlight_level_preset = 3;
 	uint8_t log_interval = 0;
 	uint32_t serial_baud = 115200;
@@ -853,23 +853,24 @@ void Screen::fsInit(void)
 	address.fromString("0.0.0.0");
 
 	Serial.println("Screen::fsInit");
+	//NOTE: When all relevant values have defaults in Settings, this block could be removed
 	if (settings->isFirstBoot(true)) {
 		Serial.println("First boot!!!");
 		settings->setBacklightLevelIndex(backlight_level_preset);
 		settings->setSerialBaudRate(serial_baud);
 		settings->setLogInterval(log_interval);
 		settings->setFirstBoot(false);
-		settings->setChannel0Voltage(String(volt_set0));
-		settings->setChannel1Voltage(String(volt_set1));
-		settings->setChannel0CurrentLimit(String(current_limit0));
-		settings->setChannel1CurrentLimit(String(current_limit1));
+		settings->setChannel0Voltage(volt_set0);
+		settings->setChannel1Voltage(volt_set1);
+		settings->setChannel0CurrentLimit(current_limit0);
+		settings->setChannel1CurrentLimit(current_limit1);
 		settings->setWifiIpv4UdpLoggingServerIpAddress(address, true);
 		settings->setWifiIpv4UdpLoggingServerPort(port_udp);
 	}
-	volt_set0 = settings->getChannel0Voltage().toFloat()*1000;
-	volt_set1 = settings->getChannel1Voltage().toFloat()*1000;
-	current_limit0 = settings->getChannel0CurrentLimit().toFloat()*1000;
-	current_limit1 = settings->getChannel1CurrentLimit().toFloat()*1000;
+	volt_set0 = settings->getChannel0Voltage();
+	volt_set1 = settings->getChannel1Voltage();
+	current_limit0 = settings->getChannel0CurrentLimit();
+	current_limit1 = settings->getChannel1CurrentLimit();
 	backlight_level_preset = settings->getBacklightLevelIndex(true);
 	serial_baud = settings->getSerialBaudRate(true);
 	log_interval = settings->getLogInterval(true);

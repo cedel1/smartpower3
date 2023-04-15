@@ -7,11 +7,6 @@ Settings::Settings()
 	// reserve space for Strings to minimize fragmentation
 	this->wifi_access_point_ssid.reserve(256);
 	this->wifi_password.reserve(64);  // the longes password currently possible
-	// volatage and current limits
-	this->channel_0_voltage.reserve(6);
-	this->channel_0_current_limit.reserve(6);
-	this->channel_1_voltage.reserve(6);
-	this->channel_1_current_limit.reserve(6);
 }
 
 void Settings::init()
@@ -322,58 +317,46 @@ void Settings::setWifiCredentialsState(wifi_credentials_state_e wifiCredentialsS
 	NVS.setInt("wifi_conn_ok", wifi_credentials_state, force_commit);
 }
 
-String Settings::getChannel0CurrentLimit(bool from_storage)
+uint16_t Settings::getChannel0CurrentLimit(bool from_storage)
 {
-	if (from_storage) {
-		NVS.getString("current_limit0", channel_0_current_limit);
-	}
-	return channel_0_current_limit;
+	return (from_storage) ? NVS.getInt("current_limit0", channel_0_current_limit) : channel_0_current_limit;
 }
 
-void Settings::setChannel0CurrentLimit(String channel0CurrentLimit, bool force_commit)
+void Settings::setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool force_commit)
 {
 	channel_0_current_limit = channel0CurrentLimit;
-	NVS.setString("current_limit0", channel_0_current_limit, force_commit);
+	NVS.setInt("current_limit0", channel_0_current_limit, force_commit);
 }
 
-String Settings::getChannel0Voltage(bool from_storage)
+uint16_t Settings::getChannel0Voltage(bool from_storage)
 {
-	if (from_storage) {
-		NVS.getString("voltage0", channel_0_voltage);
-	}
-	return channel_0_voltage;
+	return (from_storage) ? NVS.getInt("voltage0", channel_0_voltage) : channel_0_voltage;
 }
 
-void Settings::setChannel0Voltage(String channel0Voltage, bool force_commit)
+void Settings::setChannel0Voltage(uint16_t channel0Voltage, bool force_commit)
 {
 	channel_0_voltage = channel0Voltage;
-	NVS.setString("voltage0", channel_0_voltage, force_commit);
+	NVS.setInt("voltage0", channel_0_voltage, force_commit);
 }
 
-String Settings::getChannel1CurrentLimit(bool from_storage)
+uint16_t Settings::getChannel1CurrentLimit(bool from_storage)
 {
-	if (from_storage) {
-		NVS.getString("current_limit1", channel_1_current_limit);
-	}
-	return channel_1_current_limit;
+	return (from_storage) ? NVS.getInt("current_limit1", channel_1_current_limit) : channel_1_current_limit;
 }
 
-void Settings::setChannel1CurrentLimit(String channel1CurrentLimit, bool force_commit)
+void Settings::setChannel1CurrentLimit(uint16_t channel1CurrentLimit, bool force_commit)
 {
 	channel_1_current_limit = channel1CurrentLimit;
-	NVS.setString("current_limit1", channel_1_current_limit, force_commit);
+	NVS.setInt("current_limit1", channel_1_current_limit, force_commit);
 }
 
-String Settings::getChannel1Voltage(bool from_storage)
+uint16_t Settings::getChannel1Voltage(bool from_storage)
 {
-	if (from_storage) {
-		NVS.getString("voltage1", channel_1_voltage);
-	}
-	return channel_1_voltage;
+	return (from_storage) ? NVS.getInt("voltage1", channel_1_voltage) : channel_1_voltage;
 }
 
-void Settings::setChannel1Voltage(String channel1Voltage, bool force_commit)
+void Settings::setChannel1Voltage(uint16_t channel1Voltage, bool force_commit)
 {
 	channel_1_voltage = channel1Voltage;
-	NVS.setString("voltage1", channel_1_voltage, force_commit);
+	NVS.setInt("voltage1", channel_1_voltage, force_commit);
 }
