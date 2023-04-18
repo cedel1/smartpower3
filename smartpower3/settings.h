@@ -5,6 +5,19 @@
 #include <ArduinoNvs.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
+//#include "esp_event.h"
+//#include "events.h"
+
+
+//esp_event_loop_handle_t loop_with_task;
+
+
+ESP_EVENT_DECLARE_BASE(SETTINGS_EVENTS);
+
+enum {
+    SETTINGS_VOLTAGE0_CHANGED_EVENT,
+};
+
 
 
 enum wifi_credentials_state_e {
@@ -78,6 +91,7 @@ public:
 	uint16_t getChannel1Voltage(bool from_storage = false);
 	void setChannel1Voltage (uint16_t channel1Voltage, bool force_commit = true);
 
+	esp_event_loop_handle_t& getEventLoopHandleAddress(void);
 private:
 	bool first_boot = false;
 	// Power settings
@@ -113,6 +127,9 @@ private:
 	IPAddress wifi_ipv4_address_dns_2;*/
 	IPAddress wifi_ipv4_udp_logging_server_ip_address;
 	uint16_t wifi_ipv4_udp_logging_server_port = 0;
+
+	// event loop handle
+	esp_event_loop_handle_t loop_with_task;
 };
 
 #endif /* SMARTPOWER3_SETTINGS_H_ */

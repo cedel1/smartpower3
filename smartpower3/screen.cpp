@@ -19,6 +19,8 @@ void Screen::begin(Settings *settings, TwoWire *theWire)
 {
 	Serial.println("in Screen::begin");
 	this->settings = settings;
+	Serial.printf("Settings screen address: %p\n\r", this->settings);
+	Serial.printf("Settings screen address: %p\n\r", settings);
 	Serial.println("settings set");
 	
 	_wire = theWire;
@@ -955,4 +957,9 @@ void Screen::enableWiFi(void) {
 
 void Screen::disableWiFi(void) {
 	wifiManager->disableWiFi();
+}
+
+Channel* Screen::getChannel(uint8_t channel_number)
+{
+	return this->channel[channel_number];
 }

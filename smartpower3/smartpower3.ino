@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include "smartpower3.h"
+//#include "events.h"
 
 uint32_t ctime1 = 0;
 
@@ -8,6 +9,20 @@ volatile int interruptFlag;
 hw_timer_t *timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
+
+#include "esp_event.h"
+#include "esp_event_base.h"
+//#include "screen.h"
+//esp_event_loop_handle_t loop_with_task;
+
+ESP_EVENT_DEFINE_BASE(SETTINGS_EVENTS);
+
+//enum {
+    //SETTINGS_VOLTAGE0_CHANGED_EVENT,
+//};
+
+
+
 void IRAM_ATTR onTimer()
 {
 	portENTER_CRITICAL_ISR(&timerMux);
@@ -15,17 +30,53 @@ void IRAM_ATTR onTimer()
 	portEXIT_CRITICAL_ISR(&timerMux);
 }
 
+
+static void settings_voltage0_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	//Settings settings = *(Settings *)event_data);
+	Serial.println("event \"settings_voltage0_changed\" handled!!!!!!");
+	Serial.printf("voltage set (normal): %d\n\r", settings.getChannel0Voltage());
+	Serial.printf("voltage set (forced): %d\n\r", settings.getChannel0Voltage(true));
+	Serial.printf("Settings this address: %p\n\r", &settings);
+	screen.getChannel(0)->setVolt(settings.getChannel0Voltage(true), 2);
+	//delay(10);
+	//screen.drawScreen();
+	//screen.getChannel(0)->drawVoltSet(true);
+	//screen.getChannel(0)->drawChannel();
+	Serial.printf("voltage set after change: %d\n\r", settings.getChannel0Voltage(true));
+	//settings.channel[0]->setVolt(screen.settings->getChannel0Voltage(), 1);
+}
+
+
+
 void setup(void) {
 	Serial.begin(115200);
 
 	delay(100);  // needed for the following not to block
+	delay(8000);
 
 	settings.init();
+	Serial.printf("Settings address: %p\n\r", &settings);
+//	used_settings = settings;
+
+	esp_event_loop_args_t loop_with_task_args = {
+			.queue_size = 5,
+			.task_name = "loop_task", // task will be created
+			.task_priority = uxTaskPriorityGet(NULL),
+			.task_stack_size = 3072,
+			.task_core_id = tskNO_AFFINITY
+	};
+	esp_event_loop_handle_t& loop_with_task = settings.getEventLoopHandleAddress();
+	Serial.printf("loop_with_task: %p\n\r");
+	esp_event_loop_create(&loop_with_task_args, &loop_with_task);
 
 	I2CA.begin(15, 4, (uint32_t)10000);
 	I2CB.begin(21, 22, (uint32_t)800000);
 	PAC.begin(&I2CB);
 	screen.begin(&settings, &I2CA);
+
+	//settings.setChannel(screen.getChannel[0], 0);
+	//settings.setChannel(screen.getChannel[1], 1);
 	initEncoder(&dial);  // this also starts a task, without specified core
 
 	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 6000, NULL, 1, NULL, 1);  // delay 10
@@ -33,6 +84,8 @@ void setup(void) {
 	xTaskCreatePinnedToCore(logTask, "Log Task", 8000, NULL, 1, NULL, 1);  // delay 10, 250 or 1 depending on logging interval and interrupt count
 	xTaskCreate(inputTask, "Input Task", 8000, NULL, 1, NULL);  // delay 10, also counts for screen
 	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);  // delay 10
+	//xTaskCreate(voltageChangeTask, "Voltage Task", 4000, (void *)&settings, 1, NULL);  // delay 10
+	xTaskCreatePinnedToCore(voltageChangeTask, "Voltage Task", 4000, NULL, 1, NULL, 1);  // delay 10
 
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
@@ -43,7 +96,31 @@ void setup(void) {
 	timerAttachInterrupt(timer, &onTimer, true);
 	timerAlarmWrite(timer, 1000000, true);
 	timerAlarmEnable(timer);
+
+	//esp_event_loop_create_default();
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT, settings_voltage0_changed_handler, NULL, NULL);
 }
+
+
+void voltageChangeTask(void *parameter)
+{
+	delay(20000);
+	uint16_t voltage0;
+	//Settings settings = *((Settings *)parameter);
+
+	voltage0 = settings.getChannel0Voltage();
+	for (;;) {
+		while (voltage0 < 20000) {
+			voltage0 = settings.getChannel0Voltage();
+			Serial.printf(">>> Changing Voltage of channel 0 to %d<<<\n\r", voltage0+100);
+			voltage0 += 100;
+			settings.setChannel0Voltage(voltage0);
+			delay(10000);
+		}
+		//vTaskDelay(100);
+	}
+}
+
 
 void isr_stpd01_ch0()
 {

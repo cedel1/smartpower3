@@ -94,6 +94,8 @@ public:
 	void disableWiFi(void);
 	WiFiUDP udp;
 	WiFiClient client;
+	Channel* getChannel(uint8_t channel_number);
+	//void settings_voltage0_changed_handler (void *handler_args, esp_event_base_t base, int32_t id, void *event_data);
 private:
 	TFT_eSPI tft = TFT_eSPI();
 	screen_mode_t mode = BASE;
