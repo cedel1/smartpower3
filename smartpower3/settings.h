@@ -85,7 +85,7 @@ public:
 	uint16_t getChannel0CurrentLimit(bool from_storage = false);
 	void setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool force_commit = true);
 	uint16_t getChannel0Voltage(bool from_storage = false);
-	void setChannel0Voltage (uint16_t channel0Voltage, bool force_commit = true);
+	void setChannel0Voltage (uint16_t channel0Voltage, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel1CurrentLimit(bool from_storage = false);
 	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool force_commit = true);
 	uint16_t getChannel1Voltage(bool from_storage = false);

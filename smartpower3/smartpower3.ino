@@ -33,18 +33,14 @@ void IRAM_ATTR onTimer()
 
 static void settings_voltage0_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
 {
-	//Settings settings = *(Settings *)event_data);
-	Serial.println("event \"settings_voltage0_changed\" handled!!!!!!");
 	Serial.printf("voltage set (normal): %d\n\r", settings.getChannel0Voltage());
 	Serial.printf("voltage set (forced): %d\n\r", settings.getChannel0Voltage(true));
-	Serial.printf("Settings this address: %p\n\r", &settings);
+
+	// following does roughly what is done when settings value through screen UI
+	// with the exception that absolute value is set (not incremental)
+	//screen.getChannel(0)->editVolt(settings.getChannel0Voltage(true), true);
 	screen.getChannel(0)->setVolt(settings.getChannel0Voltage(true), 2);
-	//delay(10);
-	//screen.drawScreen();
-	//screen.getChannel(0)->drawVoltSet(true);
-	//screen.getChannel(0)->drawChannel();
-	Serial.printf("voltage set after change: %d\n\r", settings.getChannel0Voltage(true));
-	//settings.channel[0]->setVolt(screen.settings->getChannel0Voltage(), 1);
+	//Serial.printf("voltage set after change: %d\n\r", settings.getChannel0Voltage(true));
 }
 
 
@@ -85,7 +81,7 @@ void setup(void) {
 	xTaskCreate(inputTask, "Input Task", 8000, NULL, 1, NULL);  // delay 10, also counts for screen
 	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);  // delay 10
 	//xTaskCreate(voltageChangeTask, "Voltage Task", 4000, (void *)&settings, 1, NULL);  // delay 10
-	xTaskCreatePinnedToCore(voltageChangeTask, "Voltage Task", 4000, NULL, 1, NULL, 1);  // delay 10
+	//xTaskCreatePinnedToCore(voltageChangeTask, "Voltage Task", 4000, NULL, 1, NULL, 1);  // delay 10
 
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);
@@ -114,7 +110,7 @@ void voltageChangeTask(void *parameter)
 			voltage0 = settings.getChannel0Voltage();
 			Serial.printf(">>> Changing Voltage of channel 0 to %d<<<\n\r", voltage0+100);
 			voltage0 += 100;
-			settings.setChannel0Voltage(voltage0);
+			settings.setChannel0Voltage(voltage0, true);
 			delay(10000);
 		}
 		//vTaskDelay(100);

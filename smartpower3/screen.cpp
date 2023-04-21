@@ -286,7 +286,7 @@ void Screen::select_setting()
 		return;
 	}
 	dial_cnt_old = dial_cnt;
-	clampVariableToCircularRange(0, 3, dial_direct, &dial_cnt);  // 3 is i based count of screen_state_setting elements
+	clampVariableToCircularRange(0, 3, dial_direct, &dial_cnt);  // 3 is 0 based count of screen_state_setting elements
 
 	deSelectSetting();
 	selected = dial_cnt;

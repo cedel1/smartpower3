@@ -187,6 +187,17 @@ uint16_t STPD01::readVoltage()
 
 }
 
+/*
+ * From STPD01 documentation:
+ * 3 V to 5.9 V with 20 mV step,  // 29
+ * 5.9 V to 11 V with 100 mV step,  // 51
+ * 11 V to 20 V with 200 mV step  // 40
+ * 
+ * For exact transformation of hex value to Voltage see STPD01 documentation.
+ * 
+ * This method handles the possibly unsupported value by using
+ * the highest possible supported - lower or equal - value than value set.
+*/
 uint8_t STPD01::setVoltage(uint16_t volt)
 {
 	uint8_t val, tmp;

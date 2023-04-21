@@ -327,6 +327,46 @@ void Channel::setVolt(float volt_set, uint8_t mode)
 	}
 }
 
+uint16_t Channel::countVolt(float dial_count)
+{
+//	Serial.printf("volt_set: %f\n\r", volt_set);
+//	Serial.printf("this->volt_set: %d\n\r", this->volt_set);
+
+	int16_t step_change_voltage = 11000;
+	uint16_t steps = abs(dial_count);
+	uint16_t return_volt_set = this->volt_set;
+	int16_t distance_to_step_change = this->volt_set-step_change_voltage;
+
+//	Serial.printf("dial_count: %f\n\r", dial_count);
+//	Serial.printf("steps: %d\n\r", steps);
+//	Serial.printf("distance_to_change: %d\n\r", distance_to_step_change);
+
+
+	if (distance_to_step_change <= 0 && dial_count > 0) {  // below limit and upwards
+//		Serial.println("(distance_to_change <= 0 && dial_count > 0)");
+		while (return_volt_set < step_change_voltage && steps > 0) {
+			steps--;
+			return_volt_set += 100;
+		}
+		return_volt_set += steps*200;
+	} else if (distance_to_step_change <= 0 && dial_count < 0) {  // below limit and downwards
+//		Serial.println("(distance_to_change <= 0 && dial_count < 0)");
+		return_volt_set -= steps*100;
+	} else if (distance_to_step_change >= 0 && dial_count > 0) {  // above limit and upwards
+//		Serial.println("(distance_to_change >= 0 && dial_count > 0)");
+		return_volt_set += steps*200;
+	} else if (distance_to_step_change >= 0 && dial_count < 0) {  // above limit and downwards
+//		Serial.println("(distance_to_change >= 0 && dial_count < 0)");
+		while (return_volt_set > step_change_voltage && steps > 0) {
+			steps--;
+			return_volt_set -= 200;
+		}
+		return_volt_set += steps*100;
+	}
+//	Serial.printf("return_volt_set: %d\n\r", return_volt_set);
+	return return_volt_set;
+}
+
 void Channel::editVolt(float volt_set)
 {
 	this->_volt_set = this->countVolt(volt_set);

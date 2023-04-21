@@ -38,6 +38,7 @@ public:
 	void setCompColor(comp_t comp);
 	void clearCompColor(void);
 	void editVolt(float volt_set);
+	uint16_t countVolt(float volt_set);
 	void editCurrentLimit(float val);
 	uint16_t getVolt(void);
 	uint16_t getCurrentLimit(void);

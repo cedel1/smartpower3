@@ -335,14 +335,16 @@ uint16_t Settings::getChannel0Voltage(bool from_storage)
 	return (from_storage) ? NVS.getInt("voltage0", channel_0_voltage) : channel_0_voltage;
 }
 
-void Settings::setChannel0Voltage(uint16_t channel0Voltage, bool force_commit)
+void Settings::setChannel0Voltage(uint16_t channel0Voltage, bool set_through_settings, bool force_commit)
 {
 	channel_0_voltage = channel0Voltage;
 	NVS.setInt("voltage0", channel_0_voltage, force_commit);
 	delay(100);
 	Serial.printf("Settings this address: %p\n\r", this);
 	Serial.printf("loop_with_task: %p\n\r");
-	esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+	if (set_through_settings) {
+		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE0_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+	}
 }
 
 uint16_t Settings::getChannel1CurrentLimit(bool from_storage)
