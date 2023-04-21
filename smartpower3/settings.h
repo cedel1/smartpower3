@@ -16,6 +16,9 @@ ESP_EVENT_DECLARE_BASE(SETTINGS_EVENTS);
 
 enum {
     SETTINGS_VOLTAGE0_CHANGED_EVENT,
+	SETTINGS_CURRENT0_CHANGED_EVENT,
+	SETTINGS_VOLTAGE1_CHANGED_EVENT,
+	SETTINGS_CURRENT1_CHANGED_EVENT,
 };
 
 
@@ -83,13 +86,13 @@ public:
 	wifi_credentials_state_e getWifiCredentialsState(bool from_storage = false);
 	void setWifiCredentialsState(wifi_credentials_state_e wifiCredentialsStateSettings, bool force_commit = false);
 	uint16_t getChannel0CurrentLimit(bool from_storage = false);
-	void setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool force_commit = true);
+	void setChannel0CurrentLimit(uint16_t channel0CurrentLimit, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel0Voltage(bool from_storage = false);
 	void setChannel0Voltage (uint16_t channel0Voltage, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel1CurrentLimit(bool from_storage = false);
-	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool force_commit = true);
+	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel1Voltage(bool from_storage = false);
-	void setChannel1Voltage (uint16_t channel1Voltage, bool force_commit = true);
+	void setChannel1Voltage (uint16_t channel1Voltage, bool set_through_settings = false, bool force_commit = true);
 
 	esp_event_loop_handle_t& getEventLoopHandleAddress(void);
 private:
@@ -127,7 +130,6 @@ private:
 	IPAddress wifi_ipv4_address_dns_2;*/
 	IPAddress wifi_ipv4_udp_logging_server_ip_address;
 	uint16_t wifi_ipv4_udp_logging_server_port = 0;
-
 	// event loop handle
 	esp_event_loop_handle_t loop_with_task;
 };
