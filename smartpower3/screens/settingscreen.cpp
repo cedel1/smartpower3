@@ -25,7 +25,7 @@ void SettingScreen::init()
 	}
 
 	tft->fillRect(0, 52, 480, 285, BG_COLOR);
-	tft->loadFont(getFont("NotoSansBold20"));
+	tft->loadFont(getFont("RobotoMedium22"));
 	tft->drawString("Build date : ", x + 128, y + 215, 2);
 	tft->drawString(String(__DATE__), x + 248, y + 215, 2);
 	tft->drawString(String(__TIME__), x + 378, y + 215, 2);
@@ -495,27 +495,27 @@ void SettingScreen::deSelectSerialBaud(uint16_t text_color, uint16_t rectangle_c
 
 void SettingScreen::drawLogIntervalValue(uint16_t log_value)
 {
-	com_log_interval->clearAndDrawWithFont(getFont("NotoSansBold20"), (log_value == 0) ? "OFF" : String(log_value) + " ms");
+	com_log_interval->clearAndDrawWithFont(getFont("RobotoMedium22"), (log_value == 0) ? "OFF" : String(log_value) + " ms");
 }
 
 void SettingScreen::drawSerialBaud(uint32_t baud)
 {
-	com_serial_baud->clearAndDrawWithFont(getFont("NotoSansBold20"), String(baud) + " bps");
+	com_serial_baud->clearAndDrawWithFont(getFont("RobotoMedium22"), String(baud) + " bps");
 }
 
 void SettingScreen::drawSSID(String ssid)
 {
-	com_ssid->clearAndDrawWithFont(getFont("NotoSansBold20"), ssid);
+	com_ssid->clearAndDrawWithFont(getFont("RobotoMedium22"), ssid);
 }
 
 void SettingScreen::drawUDPIpaddr(String ipaddr)
 {
-	com_udp_ipaddr->clearAndDrawWithFont(getFont("NotoSansBold20"), ipaddr);
+	com_udp_ipaddr->clearAndDrawWithFont(getFont("RobotoMedium22"), ipaddr);
 }
 
 void SettingScreen::drawUDPport(uint16_t port)
 {
-	com_udp_port->clearAndDrawWithFont(getFont("NotoSansBold20"), (" : " + String(port)));
+	com_udp_port->clearAndDrawWithFont(getFont("RobotoMedium22"), (" : " + String(port)));
 }
 
 void SettingScreen::drawSerialLoggingEnabled(bool is_enabled)

@@ -1,5 +1,5 @@
 #include "screens/screen.h"
-#include "fonts/NotoSansBold20.h"
+#include "fonts/RobotoMedium22.h"
 
 
 Screen::Screen()
@@ -135,8 +135,8 @@ void Screen::updateWifiInfo(void)
  */
 const uint8_t* Screen::getFont(const char* font_name)
 {
-	if (strcmp(font_name, "NotoSansBold20") == 0) {
-		return NotoSansBold20;
+	if (strcmp(font_name, "RobotoMedium22") == 0) {
+		return RobotoMedium22;
 	} else {
 		return 0x00;
 	}
