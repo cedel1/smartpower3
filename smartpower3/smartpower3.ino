@@ -151,7 +151,9 @@ void wifiTask(void *parameter)
 		}
 		screen_manager.setWiFiIconState();
 
+		//instrument->processInput();
 		if (Serial.available()) {
+			//instrument->processInput();
 			if (wifi_manager->isCommandMode())
 				wifi_manager->WiFiMenuMain(Serial.read());
 			else {
@@ -160,6 +162,7 @@ void wifiTask(void *parameter)
 					wifi_manager->viewMainMenu();
 				} else {
 					Serial.printf(">>> Unknown command <<<\n\r");
+					//instrument->processInput();
 				}
 			}
 		}
@@ -194,6 +197,9 @@ void setup(void) {
 	xTaskCreatePinnedToCore(logTask, "Log Task", 8000, NULL, 1, NULL, 1);  // delay 10, 250 or 1 depending on logging interval and interrupt count
 	xTaskCreate(inputTask, "Input Task", 8000, NULL, 1, NULL);  // delay 10, also counts for screen
 	xTaskCreate(btnTask, "Button Task", 4000, NULL, 1, NULL);  // delay 10
+
+	instrument = new SCPI_Controller(&settings);
+	instrument->init();
 }
 
 void loop() {
@@ -231,4 +237,6 @@ void loop() {
 	if (screen_manager.getShutdown()) {
 		screen_manager.dimmingLED(1);
 	}
+
+	instrument->processInput();
 }

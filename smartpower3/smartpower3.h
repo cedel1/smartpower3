@@ -4,6 +4,7 @@
 #include "inputmanager.h"
 #include "settings.h"
 #include "wifimanager.h"
+#include "scpi_controller.h"
 
 #define BUTTON_MENU 36
 #define BUTTON_CH0 39
@@ -36,3 +37,5 @@ struct dial_t dial;
 
 uint8_t *onoff;
 bool low_input;
+
+SCPI_Controller *instrument;
