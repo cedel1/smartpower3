@@ -151,7 +151,7 @@ void wifiTask(void *parameter)
 		}
 		screen_manager.setWiFiIconState();
 
-		if (Serial.available()) {
+/*		if (Serial.available()) {
 			if (wifi_manager->isCommandMode())
 				wifi_manager->WiFiMenuMain(Serial.read());
 			else {
@@ -162,7 +162,8 @@ void wifiTask(void *parameter)
 					Serial.printf(">>> Unknown command <<<\n\r");
 				}
 			}
-		}
+		}*/
+		scpi_manager->processInput(Serial);
 		vTaskDelay(50);
 	}
 }
@@ -178,6 +179,9 @@ void setup(void) {
 	wifi_manager = new WiFiManager(&settings);
 	screen_manager.begin(&settings, wifi_manager, &I2CA);
 	initEncoder(&dial);  // this also starts a task, without specified core
+	//scpi_manager = new SCPIManager(&settings);  //, &screen_manager);
+	scpi_manager = new SCPIManager(&screen_manager, &mChs);
+	scpi_manager->init();
 
 	pinMode(25, INPUT_PULLUP);
 	pinMode(26, INPUT_PULLUP);

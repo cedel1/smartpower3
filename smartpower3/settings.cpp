@@ -363,6 +363,7 @@ uint16_t Settings::getChannel0Voltage(bool from_storage)
 
 void Settings::setChannel0Voltage(uint16_t channel0Voltage, bool force_commit)
 {
+	Serial.println("settings changed");
 	channel_0_voltage = channel0Voltage;
 	preferences.putUShort("voltage0", channel_0_voltage);
 }
