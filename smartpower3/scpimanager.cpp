@@ -251,13 +251,13 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltage(scpi_t *context)
 	) {
 		if (target_volts.special && target_volts.content.tag == SCPI_NUM_MIN) {
 			Serial.println("got MIN");
-			settings->setChannel0Voltage(3000);  // hardware allowed minimum
-			Serial.println(settings->getChannel0Voltage());
+			settings->setChannel0Voltage(3000, true);  // hardware allowed minimum
 			Serial.println(settings->getChannel0Voltage(true));
 			return SCPI_RES_OK;
 		} else if (target_volts.special && target_volts.content.tag == SCPI_NUM_MAX) {
 			Serial.println("got MAX");
-			settings->setChannel0Voltage(20000);  // hardware allowed maximum
+			settings->setChannel0Voltage(20000, true);  // hardware allowed maximum
+			Serial.println(settings->getChannel0Voltage(true));
 			return SCPI_RES_OK;
 		} else if (target_volts.content.value < 3.0 || target_volts.content.value > 20) {
 			SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);  // full error list define
@@ -265,7 +265,8 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltage(scpi_t *context)
 		} else {
 			Serial.printf("\texpected_value P1=%f\r\n", target_volts.content.value);
 			Serial.printf("\texpected_value P1=%d\r\n", static_cast<uint16_t>((target_volts.content.value)*1000));
-			settings->setChannel0Voltage(static_cast<uint16_t>((target_volts.content.value)*1000));
+			settings->setChannel0Voltage(static_cast<uint16_t>((target_volts.content.value)*1000), true);
+			Serial.println(settings->getChannel0Voltage(true));
 			return SCPI_RES_OK;
 		}
 	} else {
