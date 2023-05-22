@@ -88,9 +88,9 @@ public:
 	uint16_t getChannel0Voltage(bool from_storage = false);
 	void setChannel0Voltage (uint16_t channel0Voltage, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel1CurrentLimit(bool from_storage = false);
-	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool force_commit = true);
+	void setChannel1CurrentLimit (uint16_t channel1CurrentLimit, bool set_through_settings = false, bool force_commit = true);
 	uint16_t getChannel1Voltage(bool from_storage = false);
-	void setChannel1Voltage (uint16_t channel1Voltage, bool force_commit = true);
+	void setChannel1Voltage (uint16_t channel1Voltage, bool set_through_settings = false, bool force_commit = true);
 	//helper methods
 	bool isNvsCleared(bool from_storage = false);
 	void setNvsCleared(bool nvsCleared = false);

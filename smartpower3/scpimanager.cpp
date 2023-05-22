@@ -147,7 +147,7 @@ scpi_result_t SCPIManager::DMM_MeasureVoltageDcQ(scpi_t *context)
 	scpi_number_t expected_value;
 	scpi_number_t resolution;
 
-	float base_result = (static_cast<float>(channels->getChannel(0)->V()))/1000;
+	float base_result = (static_cast<float>(channels->getChannel(1)->V()))/1000;
 	char bf[15];
 	char cf[15];
 
@@ -267,6 +267,49 @@ scpi_result_t SCPIManager::DMM_ConfigureVoltage(scpi_t *context)
 			Serial.printf("\texpected_value P1=%d\r\n", static_cast<uint16_t>((target_volts.content.value)*1000));
 			settings->setChannel0Voltage(static_cast<uint16_t>((target_volts.content.value)*1000), true);
 			Serial.println(settings->getChannel0Voltage(true));
+			return SCPI_RES_OK;
+		}
+	} else {
+		SCPI_ErrorPush(context, SCPI_ERROR_INVALID_SUFFIX);
+		return SCPI_RES_ERR;
+	}
+	return SCPI_RES_ERR;
+}
+
+scpi_result_t SCPIManager::DMM_ConfigureCurrent(scpi_t *context)
+{
+	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
+	Settings *settings = user_ctx->settings;
+	scpi_number_t target_amps;
+
+	// required to accept MIN and MAX
+
+	if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &target_amps, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+
+	if (target_amps.unit == SCPI_UNIT_NONE
+			|| target_amps.unit == SCPI_UNIT_UNITLESS
+			|| target_amps.unit == SCPI_UNIT_AMPER
+	) {
+		if (target_amps.special && target_amps.content.tag == SCPI_NUM_MIN) {
+			Serial.println("got MIN");
+			settings->setChannel0CurrentLimit(500, true);  // hardware allowed minimum
+			Serial.println(settings->getChannel0CurrentLimit(true));
+			return SCPI_RES_OK;
+		} else if (target_amps.special && target_amps.content.tag == SCPI_NUM_MAX) {
+			Serial.println("got MAX");
+			settings->setChannel0CurrentLimit(3000, true);  // hardware allowed maximum
+			Serial.println(settings->getChannel0CurrentLimit(true));
+			return SCPI_RES_OK;
+		} else if (target_amps.content.value < 0.5 || target_amps.content.value > 3) {
+			SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);  // full error list define
+			return SCPI_RES_ERR;
+		} else {
+			Serial.printf("\texpected_value P1=%f\r\n", target_amps.content.value);
+			Serial.printf("\texpected_value P1=%d\r\n", static_cast<uint16_t>((target_amps.content.value)*1000));
+			settings->setChannel0CurrentLimit(static_cast<uint16_t>((target_amps.content.value)*1000), true);
+			Serial.println(settings->getChannel0CurrentLimit(true));
 			return SCPI_RES_OK;
 		}
 	} else {

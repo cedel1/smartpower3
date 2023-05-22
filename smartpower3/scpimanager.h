@@ -75,6 +75,7 @@ public:
 	static scpi_result_t Output_TurnOnOffQ(scpi_t *context);
 	static scpi_result_t DMM_MeasureVoltageDcQ(scpi_t *context);
 	static scpi_result_t DMM_ConfigureVoltage(scpi_t *context);
+	static scpi_result_t DMM_ConfigureCurrent(scpi_t *context);
 
 	char* getBuildDate(void);
 	const char* getMacAddress(void);
@@ -135,7 +136,7 @@ private:
 		/* DMM */
 		{ "MEASure[:SCALar]:VOLTage:DC?", DMM_MeasureVoltageDcQ, 0 },
 
-		//{"[SOURce]:CURRent", DMM_ConfigureCurrent, 0 },
+		{"[SOURce]:CURRent", DMM_ConfigureCurrent, 0 },
 		{"[SOURce]:VOLTage", DMM_ConfigureVoltage, 0 },
 
 /*		{ "CONFigure:VOLTage:DC", DMM_ConfigureVoltageDc, 0 },

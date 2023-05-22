@@ -379,10 +379,13 @@ uint16_t Settings::getChannel1CurrentLimit(bool from_storage)
 	return (from_storage) ? preferences.getUShort("current_limit1", channel_1_current_limit) : channel_1_current_limit;
 }
 
-void Settings::setChannel1CurrentLimit(uint16_t channel1CurrentLimit, bool force_commit)
+void Settings::setChannel1CurrentLimit(uint16_t channel1CurrentLimit, bool set_through_settings, bool force_commit)
 {
 	channel_1_current_limit = channel1CurrentLimit;
 	preferences.putUShort("current_limit1", channel_1_current_limit);
+	if (set_through_settings) {
+		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT1_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+	}
 }
 
 uint16_t Settings::getChannel1Voltage(bool from_storage)
@@ -390,10 +393,14 @@ uint16_t Settings::getChannel1Voltage(bool from_storage)
 	return (from_storage) ? preferences.getUShort("voltage1", channel_1_voltage) : channel_1_voltage;
 }
 
-void Settings::setChannel1Voltage(uint16_t channel1Voltage, bool force_commit)
+void Settings::setChannel1Voltage(uint16_t channel1Voltage, bool set_through_settings, bool force_commit)
 {
 	channel_1_voltage = channel1Voltage;
 	preferences.putUShort("voltage1", channel_1_voltage);
+	delay(100);
+	if (set_through_settings) {
+		esp_event_post_to((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE1_CHANGED_EVENT, NULL, sizeof(NULL), portMAX_DELAY);
+	}
 }
 
 bool Settings::isNvsCleared(bool from_storage)
