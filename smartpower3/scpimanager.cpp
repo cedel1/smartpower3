@@ -26,6 +26,7 @@ void SCPIManager::init(void)
 		scpi_commands,
 		&scpi_interface,
 		scpi_units_def,
+		//SCPI_IDN1, SCPI_IDN2, this->user_context->settings->getMacAddress().c_str(), this->getBuildDate(),
 		SCPI_IDN1, SCPI_IDN2, this->getMacAddress(), this->getBuildDate(),
 		scpi_input_buffer, SCPI_INPUT_BUFFER_LENGTH,
 		scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
@@ -319,6 +320,89 @@ scpi_result_t SCPIManager::DMM_ConfigureCurrent(scpi_t *context)
 	return SCPI_RES_ERR;
 }
 
+scpi_result_t SCPIManager::SCPI_NetworkMACQ(scpi_t *context)
+{
+	SCPI_ResultMnemonic(context, getSettings(context)->getMacAddress().c_str());
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkDHCP (scpi_t *context)
+{
+	scpi_bool_t dhcp_enabled;
+	/* read first parameter if present */
+	// this parameter is mandatory, so error out if not present
+	if (!SCPI_ParamBool(context, &dhcp_enabled, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+
+	getSettings(context)->setWifiIpv4DhcpEnabled(dhcp_enabled);
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkDHCPQ (scpi_t *context)
+{
+	SCPI_ResultBool(context, getSettings(context)->isWifiIpv4DhcpEnabled());
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkAddress (scpi_t *context)
+{
+	return SCPIManager::saveIpv4Address(context, &Settings::setWifiIpv4StaticIp);
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkAddressQ (scpi_t *context)
+{
+	SCPI_ResultMnemonic(context, getSettings(context)->getWifiIpv4StaticIp(true).toString().c_str());
+	return SCPI_RES_OK;
+
+	//SCPI_ResultMnemonic(context, WiFi.localIP().toString().c_str());
+	//return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkGate (scpi_t *context)
+{
+	return SCPIManager::saveIpv4Address(context, &Settings::setWifiIpv4GatewayAddress);
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkGateQ (scpi_t *context)
+{
+	SCPI_ResultMnemonic(context, getSettings(context)->getWifiIpv4GatewayAddress(true).toString().c_str());
+	return SCPI_RES_OK;
+
+	//SCPI_ResultMnemonic(context, WiFi.gatewayIP().toString().c_str());
+	//return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkSubnet (scpi_t *context)
+{
+	return SCPIManager::saveIpv4Address(context, &Settings::setWifiIpv4SubnetMask);
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkSubnetQ (scpi_t *context)
+{
+	SCPI_ResultMnemonic(context, getSettings(context)->getWifiIpv4SubnetMask(true).toString().c_str());
+	return SCPI_RES_OK;
+
+	//SCPI_ResultMnemonic(context, WiFi.subnetMask().toString().c_str());
+	//return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkPort (scpi_t *context)
+{
+	return SCPIManager::saveNetworkPort(context, &Settings::setWifiIpv4SCPIServerPort);
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkPortQ (scpi_t *context)
+{
+	SCPI_ResultUInt16(context, getSettings(context)->getWifiIpv4SCPIServerPort());
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_NetworkHostnameQ (scpi_t *context)
+{
+	return SCPI_RES_ERR;
+}
+
 const char* SCPIManager::getMacAddress()
 {
 	mac_address = WiFi.macAddress();
@@ -328,6 +412,72 @@ const char* SCPIManager::getMacAddress()
 char* SCPIManager::getBuildDate()
 {
 	return this->build_date;
+}
+
+scpi_result_t SCPIManager::SCPI_SocketPort (scpi_t *context)
+{
+	return SCPIManager::saveNetworkPort(context, &Settings::setWifiIpv4UdpLoggingServerPort);
+}
+
+scpi_result_t SCPIManager::SCPI_SocketPortQ (scpi_t *context)
+{
+	SCPI_ResultUInt16(context, getSettings(context)->getWifiIpv4UdpLoggingServerPort());
+	return SCPI_RES_OK;
+}
+
+scpi_result_t SCPIManager::SCPI_SocketIPAddress(scpi_t *context)
+{
+	return SCPIManager::saveIpv4Address(context, &Settings::setWifiIpv4UdpLoggingServerIpAddress);
+}
+
+scpi_result_t SCPIManager::SCPI_SocketIPAddressQ(scpi_t *context)
+{
+	SCPI_ResultMnemonic(context, getSettings(context)->getWifiIpv4UdpLoggingServerIpAddress().toString().c_str());
+	return SCPI_RES_OK;
+}
+
+Settings* SCPIManager::getSettings(scpi_t *context)
+{
+	return static_cast<UserContext *>(context->user_context)->settings;
+}
+
+scpi_result_t SCPIManager::saveIpv4Address(scpi_t *context, void (Settings::*func)(IPAddress, bool, bool))
+{
+	const char* value;
+	uint len;
+	IPAddress ipaddr_obj;
+	char ipaddr[15];
+	memset(ipaddr, 0x00, sizeof(ipaddr));
+
+	if (!SCPI_ParamCharacters(context, &value, &len, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	strncpy(ipaddr, value, len);
+	if (ipaddr_obj.fromString(ipaddr)) {
+		(getSettings(context)->* func)(ipaddr_obj, true, false);
+		return SCPI_RES_OK;
+	} else {
+		SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+		return SCPI_RES_ERR;
+	}
+	return SCPI_RES_ERR;
+}
+
+scpi_result_t SCPIManager::saveNetworkPort(scpi_t *context, void (Settings::*func)(uint16_t, bool, bool))
+{
+	scpi_number_t port;
+
+	if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &port, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+
+	if (0 <= port.content.value < 10000) {
+		(getSettings(context)->* func)(port.content.value, true, false);
+		return SCPI_RES_OK;
+	} else {
+		SCPI_ErrorPush(context, SCPI_ERROR_DATA_OUT_OF_RANGE);
+		return SCPI_RES_ERR;
+	}
 }
 
 /*ScreenManager SCPIManager::getScreenManager(void)

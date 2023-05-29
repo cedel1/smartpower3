@@ -71,6 +71,13 @@ static void settings_current1_changed_handler(void *handler_args, esp_event_base
 	screen_manager.getVoltageScreen()->getChannel(1)->setCurrentLimit(settings.getChannel1CurrentLimit(true), 2);
 }
 
+static void settings_visible_settings_changed_handler(void *handler_args, esp_event_base_t base, int32_t id, void *event_data)
+{
+	wifi_manager->update_udp_info = true;
+	wifi_manager->port_udp = settings.getWifiIpv4UdpLoggingServerPort(true);
+	wifi_manager->ipaddr_udp = settings.getWifiIpv4UdpLoggingServerIpAddress(true);
+}
+
 void logTask(void *parameter)
 {
 	char buffer_input[SIZE_LOG_BUFFER0];
@@ -264,7 +271,8 @@ void setup(void) {
 	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_VOLTAGE1_CHANGED_EVENT, settings_voltage1_changed_handler, NULL, NULL);
 	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT0_CHANGED_EVENT, settings_current0_changed_handler, NULL, NULL);
 	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_CURRENT1_CHANGED_EVENT, settings_current1_changed_handler, NULL, NULL);
-
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_LOGGING_PORT_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);
+	esp_event_handler_instance_register_with((esp_event_loop_handle_t)loop_with_task, SETTINGS_EVENTS, SETTINGS_LOGGING_ADDRESS_CHANGED_EVENT, settings_visible_settings_changed_handler, NULL, NULL);
 }
 
 void loop() {
