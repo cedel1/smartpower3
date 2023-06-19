@@ -195,8 +195,8 @@ private:
 		/* DMM */
 		{ "MEASure[:SCALar]:VOLTage:DC?", DMM_MeasureVoltageDcQ, 0 },
 
-		{"[SOURce]:CURRent", DMM_ConfigureCurrent, 0 },
-		{"[SOURce]:VOLTage", DMM_ConfigureVoltage, 0 },
+		{"[SOURce#]:CURRent", DMM_ConfigureCurrent, 0 },
+		{"[SOURce#]:VOLTage", DMM_ConfigureVoltage, 0 },
 
 /*		{ "CONFigure:VOLTage:DC", DMM_ConfigureVoltageDc, 0 },
 		{ "MEASure:VOLTage:DC:RATio?", SCPI_StubQ, 0 },
@@ -211,19 +211,10 @@ private:
 		//{ "INSTrument:NSELect", INST_SelectByNumber, 0 },
 		//{ "INSTrument:SELect", INST_SelectByIdentifier, 0 },
 
-		{ "OUTPut[:STATe]", Output_TurnOnOff, 0 },
-		{ "OUTPut[:STATe]?", Output_TurnOnOffQ, 0 },
+		{ "OUTPut#[:STATe]", Output_TurnOnOff, 0 },
+		{ "OUTPut#[:STATe]?", Output_TurnOnOffQ, 0 },
 
 		/*{ "SYSTem:COMMunication:TCPIP:CONTROL?", SCPI_SystemCommTcpipControlQ, 0 },*/
-
-		/*{ "TEST:BOOL", TEST_Bool, 0 },
-		{ "TEST:CHOice?", TEST_ChoiceQ, 0 },
-		{ "TEST#:NUMbers#", TEST_Numbers, 0 },
-		{ "TEST:TEXT", TEST_Text, 0 },
-		{ "TEST:ARBitrary?", TEST_ArbQ, 0 },
-		{ "TEST:CHANnellist", TEST_Chanlst, 0 },*/
-
-
 
 		SCPI_CMD_LIST_END
 	};
