@@ -199,6 +199,7 @@ void wifiTask(void *parameter)
 		screen_manager.setWiFiIconState();
 
 		if (Serial.available()) {
+//TODO: Check the functionality of Serial in SCPI and non-SCPI mode
 			if (wifi_manager->isCommandMode()) {
 				wifi_manager->WiFiMenuMain(Serial.read());
 			} else if (wifi_manager->getOperationMode() == OPERATION_MODE_SCPI) {
@@ -253,7 +254,7 @@ void setup(void) {
 	timerAlarmEnable(timer);
 
 	xTaskCreatePinnedToCore(screenTask, "Draw Screen", 2048, NULL, 1, &screen_handle, 1);  // delay 10
-	xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2048, NULL, 1, &wifi_handle, 1);  // delay 50
+	xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2512, NULL, 1, &wifi_handle, 1);  // delay 50
 	xTaskCreatePinnedToCore(logTask, "Log Task", 2048, NULL, 1, &log_handle, 1);  // delay 10, 250 or 1 depending on logging interval and interrupt count
 	xTaskCreate(inputTask, "Input Task", 672, NULL, 1, &input_handle);  // delay 10, also counts for screen
 	xTaskCreate(btnTask, "Button Task", 672, NULL, 1, &button_handle);  // delay 10
