@@ -264,9 +264,7 @@ scpi_result_t SCPIManager::DMM_MeasureUnitDcQ(scpi_t *context, scpi_unit_t allow
 {
 	const uint8_t max_param_count = 3;
 	UserContext *user_ctx = static_cast<UserContext *>(context->user_context);
-	//Settings *settings = user_ctx->settings;
 	MeasChannels *channels = user_ctx->measuring_channels;
-	//ScreenManager *sm = user_ctx->screen_manager;
 	scpi_number_t expected_value;
 	scpi_number_t resolution;
 	scpi_parameter_t working_param;
